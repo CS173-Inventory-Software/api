@@ -1,4 +1,5 @@
 
+import datetime
 from django.contrib.auth import authenticate
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
@@ -28,7 +29,7 @@ class CustomAuthTokenSerializer(serializers.Serializer):
     )
 
     def validate(self, attrs):
-        print(attrs)
+        now = datetime.datetime.now()
         email = attrs.get('email')
         code = attrs.get('code')
 
@@ -37,6 +38,10 @@ class CustomAuthTokenSerializer(serializers.Serializer):
 
             if not user or code != user['auth_code']:
                 msg = _('Unable to log in with provided credentials.')
+                raise serializers.ValidationError(msg, code='authorization')
+            expiry = datetime.datetime.strptime(user['auth_expiry'], '%Y-%m-%dT%H:%M:%S.%fZ')
+            if now > expiry:
+                msg = _('Code has expired.')
                 raise serializers.ValidationError(msg, code='authorization')
         else:
             msg = _('Must include "email" and "passcode".')
@@ -58,7 +63,6 @@ class CustomAuthToken(ObtainAuthToken):
     serializer_class = CustomAuthTokenSerializer
 
     def post(self, request, *args, **kwargs):
-        print("post")
         serializer = self.serializer_class(data=request.data,
                                            context={'request': request})
         serializer.is_valid(raise_exception=True)
