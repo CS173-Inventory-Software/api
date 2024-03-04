@@ -1,11 +1,14 @@
 import random
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from ..baserow_client import users_table
 from baserowapi import Filter
 import datetime
 from django.core.mail import send_mail
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+from django.conf import settings
 
 @api_view(['POST'])
 def request_code(request):
@@ -33,4 +36,16 @@ def request_code(request):
         [email],
     )
 
-    return Response({"message": "Code sent"}, status=status.HTTP_200_OK)
+    response_data = {"message": "Code sent"}
+
+    if settings.DEBUG:
+        response_data["code"] = code
+
+    return Response(response_data, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def get_user(request):
+    user = request.user
+    return Response({"email": user.email}, status=status.HTTP_200_OK)

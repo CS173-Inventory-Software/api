@@ -26,7 +26,8 @@ SECRET_KEY = 'django-insecure-znbc5ic#acq24n6fh019r#2$!a71pu!^%xdlrk!erb+e&zfr!q
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['ebun2']
+ALLOWED_HOSTS = os.environ['ALLOWED_HOSTS'].split(',')
+CORS_ALLOWED_ORIGINS = os.environ['CORS_ALLOWED_ORIGINS'].split(',')
 
 
 # Application definition
@@ -41,11 +42,13 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'app',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -130,7 +133,7 @@ BASEROW_TOKEN=os.environ['BASEROW_TOKEN']
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ]
 }
