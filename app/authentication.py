@@ -34,7 +34,7 @@ class CustomAuthTokenSerializer(serializers.Serializer):
         code = attrs.get('code')
 
         if email and code:
-            user = users_table.get_rows(filter=Filter("email", email), return_single=True)
+            user = users_table.get_rows(filters=[Filter("email", email)], return_single=True)
 
             if not user or code != user['auth_code']:
                 msg = _('Unable to log in with provided credentials.')

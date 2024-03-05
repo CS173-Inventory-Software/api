@@ -14,7 +14,7 @@ from django.conf import settings
 def request_code(request):
     email = request.data.get('email')
     # Check if email exists
-    user = users_table.get_rows(filter=Filter("email", email), return_single=True)
+    user = users_table.get_rows(filters=[Filter("email", email)], return_single=True)
     if not user:
         return Response({"message": "Email not found"}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
