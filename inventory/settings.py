@@ -138,6 +138,10 @@ REST_FRAMEWORK = {
     ]
 }
 
+MEDIA_ROOT = os.environ["MEDIA_ROOT"]
+MEDIA_URL = os.environ["MEDIA_URL"]
+
+STATIC_ROOT = os.environ["STATIC_ROOT"]
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.environ['EMAIL_HOST']
 EMAIL_PORT = os.environ['EMAIL_PORT']
