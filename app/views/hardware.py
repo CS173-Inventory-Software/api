@@ -7,5 +7,9 @@ class HardwareList(APIView):
     def get(self, request, format=None):
         hardware = []
         for row in hardware_table.get_rows():
-            hardware.append(row.content)
+            data = row.content
+            data['id'] = row.id
+            if row['status'] == []:
+                data['status'] = 'Available'
+            hardware.append(data)
         return Response({'data': hardware}, status=status.HTTP_200_OK)
