@@ -5,6 +5,8 @@ baserow = Baserow(url='https://baserow.kimpalao.com', token=settings.BASEROW_TOK
 
 users_table = baserow.get_table(513)
 hardware_table = baserow.get_table(514)
+hardware_instance_table = baserow.get_table(539)
+status_table = baserow.get_table(515)
 
 def get_baserow_operator(op):
     match op:
