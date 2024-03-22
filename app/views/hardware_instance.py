@@ -49,7 +49,7 @@ class HardwareInstanceList(APIView):
                 continue
             data = row.content
             data['hardware'] = row.values['hardware'].id
-            data['status'] = row.values['status'].id
+            data['status'] = row.values['status'].id if len(row.values['status'].value) else None
             data['id'] = row.id
             if row['status'] == []:
                 data['status'] = 'Available'
