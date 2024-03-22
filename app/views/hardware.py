@@ -90,13 +90,45 @@ class HardwareDetail(APIView):
             for row in rows:
                 instance = row.content
                 instance['id'] = row.id
+                instance['status'] = row.values['status'].id if len(row.values['status'].value) else None
+
                 del instance['hardware']
                 instances.append(instance)
 
             data['one2m'] = {
-                'instances': instances
+                'instances': {
+                    'data': instances
+                }
             }
 
             return Response({'data': data})
-        except:
+        except Exception as e:
+            print(e)
             raise Http404
+
+    def put(self, request, pk, format=None):
+        row = hardware_table.get_row(pk)
+        row['name'] = request.data.get('name')
+        row['brand'] = request.data.get('brand')
+        row['type'] = request.data.get('type')
+        row['model_number'] = request.data.get('model_number')
+        row['description'] = request.data.get('description')
+
+        instances = request.data.get('one2m').get('instances').get('data')
+        for instance in instances:
+            if 'id' in instance:
+                instance_row = hardware_instance_table.get_row(instance['id'])
+                instance_row['serial_number'] = instance['serial_number']
+                instance_row['procurement_date'] = instance['procurement_date']
+                instance_row['status'] = [instance['status']]
+                instance_row.update()
+            else:
+                new_instance_row = {
+                    'serial_number': instance.get('serial_number'),
+                    'procurement_date': instance.get('procurement_date'),
+                    'status': [instance.get('status')],
+                    'hardware': [pk],
+                }
+                hardware_instance_table.add_row(new_instance_row)
+
+        return Response({'message': 'successful'})

@@ -1,5 +1,5 @@
 asgiref==3.7.2
-baserowapi==0.1.0b1
+git+https://github.com/KimPalao/baserowapi.git
 certifi==2024.2.2
 charset-normalizer==3.3.2
 databind.core==4.4.2
