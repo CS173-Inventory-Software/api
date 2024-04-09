@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
 from ..baserow_client import hardware_table, hardware_instance_table, get_baserow_operator
+from ..baserow_client.assignment_log import AssignmentLog
 from baserowapi import Filter
 import json
 from django.http import Http404
@@ -72,8 +73,17 @@ class HardwareList(APIView):
                 'serial_number': instance.get('serial_number'),
                 'procurement_date': instance.get('procurement_date'),
                 'hardware': [new_id],
+                'status': [instance.get('status')],
             }
-            hardware_instance_table.add_row(new_instance_row)
+            if instance.get("assignee"):
+                new_instance_row['assignee'] = [instance.get('assignee')]
+                # Add assignment log
+            hardware_instance_row = hardware_instance_table.add_row(new_instance_row)
+            if instance.get("assignee"):
+                AssignmentLog.assign({
+                    'user': [instance.get('assignee')],
+                    'hardware': [hardware_instance_row.id],
+                })
         return Response({'data': new_id}, status=status.HTTP_201_CREATED)
 
 class HardwareDetail(APIView):
@@ -92,6 +102,7 @@ class HardwareDetail(APIView):
                 instance['id'] = row.id
                 instance['status'] = row.values['status'].id if len(row.values['status'].value) else None
                 instance['hardware'] = row.values['hardware'].id
+                instance['assignee'] = row.values['assignee'].id if len(row.values['assignee'].value) else None
                 instances.append(instance)
 
             data['one2m'] = {
@@ -126,7 +137,33 @@ class HardwareDetail(APIView):
                 instance_row = hardware_instance_table.get_row(instance['id'])
                 instance_row['serial_number'] = instance['serial_number']
                 instance_row['procurement_date'] = instance['procurement_date']
-                instance_row['status'] = [instance['status']]
+                if instance.get('status'):
+                    instance_row['status'] = [instance['status']]
+
+                current_assignee = instance_row['assignee']
+                assignment_type = None
+
+                # Check if the new assignee is set and the current assignee is not set
+                # Assign
+                if instance.get('assignee') and len(instance_row['assignee']) == 0:
+                    AssignmentLog.assign(instance['assignee'], hardware=instance['id'])
+
+                # Check if the new assignee and current assignee are set
+                # Assign and unassign
+                if instance.get('assignee') and len(instance_row['assignee']) > 0:
+                    AssignmentLog.assign(instance['assignee'], hardware=instance['id'])
+                    AssignmentLog.assign(instance_row['assignee'][0], hardware=instance['id'], assignment_type=2)
+
+                # Check if the new assignee is not set and the current assignee
+                # Unassign
+                if not instance.get('assignee') and len(instance_row['assignee']) > 0:
+                    AssignmentLog.assign(instance_row['assignee'][0], hardware=instance['id'], assignment_type=2)
+
+                if instance.get('assignee'):
+                    instance_row['assignee'] = [instance['assignee']]
+                else:
+                    instance_row['assignee'] = []
+
                 instance_row.update()
             else:
                 new_instance_row = {
@@ -135,6 +172,13 @@ class HardwareDetail(APIView):
                     'status': [instance.get('status')],
                     'hardware': [pk],
                 }
-                hardware_instance_table.add_row(new_instance_row)
+
+                if instance.get('assignee'):
+                    new_instance_row['assignee'] = [instance.get('assignee')]
+
+                hardware_instance_row = hardware_instance_table.add_row(new_instance_row)
+
+                if instance.get('assignee'):
+                    AssignmentLog.assign(instance['assignee'], hardware=hardware_instance_row.id)
 
         return Response({'message': 'successful'})

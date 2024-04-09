@@ -7,6 +7,7 @@ users_table = baserow.get_table(513)
 hardware_table = baserow.get_table(514)
 hardware_instance_table = baserow.get_table(539)
 status_table = baserow.get_table(515)
+assignment_log_table = baserow.get_table(541)
 
 def get_baserow_operator(op):
     match op:
