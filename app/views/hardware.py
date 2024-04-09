@@ -100,9 +100,9 @@ class HardwareDetail(APIView):
             for row in rows:
                 instance = row.content
                 instance['id'] = row.id
-                instance['status'] = row.values['status'].id if len(row.values['status'].value) else None
+                instance['status'] = row.values['status'].id
                 instance['hardware'] = row.values['hardware'].id
-                instance['assignee'] = row.values['assignee'].id if len(row.values['assignee'].value) else None
+                instance['assignee'] = row.values['assignee'].id
                 instances.append(instance)
 
             data['one2m'] = {

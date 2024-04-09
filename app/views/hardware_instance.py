@@ -49,9 +49,7 @@ class HardwareInstanceList(APIView):
                 continue
             data = row.content
             data['hardware'] = row.values['hardware'].id
-            data['status'] = row.values['status'].id if len(row.values['status'].value) else None
+            data['status'] = row.values['status'].id
             data['id'] = row.id
-            if row['status'] == []:
-                data['status'] = 'Available'
             hardware.append(data)
         return Response({'data': hardware, 'totalRecords': row_counter}, status=status.HTTP_200_OK)
