@@ -174,8 +174,9 @@ class SoftwareDetail(APIView):
                     AssignmentLog.assign(instance['assignee'], software=instance['id'])
 
                 # Check if the new assignee and current assignee are set
+                # And if they are not equal
                 # Assign and unassign
-                if instance.get('assignee') and len(instance_row['assignee']) > 0:
+                if instance.get('assignee') and len(instance_row['assignee']) > 0 and instance.get('assignee') != instance_row.values['assignee'].id:
                     AssignmentLog.assign(instance['assignee'], software=instance['id'])
                     AssignmentLog.assign(instance_row['assignee'][0], software=instance['id'], assignment_type=2)
 

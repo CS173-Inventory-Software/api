@@ -123,6 +123,7 @@ class HardwareDetail(APIView):
         row['type'] = request.data.get('type')
         row['model_number'] = request.data.get('model_number')
         row['description'] = request.data.get('description')
+        row.update()
 
         instances_to_delete = request.data.get('one2m').get('instances').get('delete')
         for instance in instances_to_delete:
@@ -149,8 +150,9 @@ class HardwareDetail(APIView):
                     AssignmentLog.assign(instance['assignee'], hardware=instance['id'])
 
                 # Check if the new assignee and current assignee are set
+                # And if they are not equal
                 # Assign and unassign
-                if instance.get('assignee') and len(instance_row['assignee']) > 0:
+                if instance.get('assignee') and len(instance_row['assignee']) > 0 and instance.get('assignee') != instance_row.values['assignee'].id:
                     AssignmentLog.assign(instance['assignee'], hardware=instance['id'])
                     AssignmentLog.assign(instance_row['assignee'][0], hardware=instance['id'], assignment_type=2)
 
