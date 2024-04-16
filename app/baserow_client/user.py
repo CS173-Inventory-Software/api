@@ -16,7 +16,12 @@ class User:
         return cls.table.add_row(new_row)
 
 
-class UserType(Enum):
+class UserType:
+    table = baserow.get_table(544)
+
+class UserTypeEnum(Enum):
+    _ignore_ = ['table']
+
     ROOT_ADMIN = 1
     SUPER_ADMIN = 2
     ADMIN = 3

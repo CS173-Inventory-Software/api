@@ -60,3 +60,22 @@ class UserList(APIView):
         )
 
         return Response({'data': added_row.id}, status=status.HTTP_201_CREATED)
+
+class UserDetail(APIView):
+    def get(self, request, pk, format=None):
+        try:
+            row = User.table.get_row(pk)
+        except Exception as e:
+            raise Http404
+
+        data = row.content
+        data['id'] = row.id
+        data['type'] = row.values['type'].id
+        return Response({'data': data})
+
+    def put(self, request, pk, format=None):
+        row = User.table.get_row(pk)
+        row['email'] = request.data.get('email')
+        row['type'] = [request.data.get('type')]
+        row.update()
+        return Response({'message': 'Successful'})

@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework.authtoken import views
 from .authentication import CustomAuthToken
-from .views import authentication, hardware, status, hardware_instance, software, software_instance, user
+from .views import authentication, hardware, status, hardware_instance, software, software_instance, user, user_type
 
 urlpatterns = [
     path('login/', CustomAuthToken.as_view()),
@@ -24,4 +24,8 @@ urlpatterns = [
 
     # Users
     path('users/', user.UserList.as_view()),
+    path('users/<int:pk>', user.UserDetail.as_view()),
+
+    # User Types
+    path('user-types/', user_type.UserTypeList.as_view()),
 ]
