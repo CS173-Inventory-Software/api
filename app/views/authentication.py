@@ -43,6 +43,15 @@ def request_code(request):
 
     return Response(response_data, status=status.HTTP_200_OK)
 
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def logout(request):
+    user = request.user
+    user.auth_token.delete()
+
+    return Response({}, status=status.HTTP_204_NO_CONTENT)
+
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])

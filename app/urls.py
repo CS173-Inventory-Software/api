@@ -5,6 +5,7 @@ from .views import authentication, hardware, status, hardware_instance, software
 
 urlpatterns = [
     path('login/', CustomAuthToken.as_view()),
+    path('logout/', authentication.logout),
     path('request-code/', authentication.request_code),
     path('get-user/', authentication.get_user),
 
