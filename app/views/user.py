@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
 from ..baserow_client import users_table, get_baserow_operator
+from ..baserow_client.user import User, UserType
 from baserowapi import Filter
 import json
 from django.http import Http404
@@ -51,3 +52,11 @@ class UserList(APIView):
             data['id'] = row.id
             users.append(data)
         return Response({'data': users, 'totalRecords': row_counter}, status=status.HTTP_200_OK)
+
+    def post(self, request, format=None):
+        added_row = User.create(
+            request.data.get('email'), 
+            request.data.get('type')
+        )
+
+        return Response({'data': added_row.id}, status=status.HTTP_201_CREATED)
