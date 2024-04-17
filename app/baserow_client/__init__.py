@@ -1,7 +1,7 @@
-from inventory import settings
+from inventory.settings import BASEROW_TOKEN, BASEROW_TABLE_MAP
 from baserowapi import Baserow
 
-baserow = Baserow(url='https://baserow.kimpalao.com', token=settings.BASEROW_TOKEN)
+baserow = Baserow(url='https://baserow.kimpalao.com', token=BASEROW_TOKEN)
 
 def get_baserow_operator(op):
     match op:
