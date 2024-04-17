@@ -10,6 +10,7 @@ from .baserow_client import users_table
 from baserowapi import Filter
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
+from .models import Role
 
 
 class CustomAuthTokenSerializer(serializers.Serializer):
@@ -53,7 +54,9 @@ class CustomAuthTokenSerializer(serializers.Serializer):
             django_user = User.objects.get(email=email)
         except ObjectDoesNotExist:
             django_user = User.objects.create_user(username=email, email=email, password="")
-            
+
+        Role.objects.update_or_create({'role': user.values['type'].id}, user=django_user)
+
         attrs['user'] = django_user
         return attrs
 
