@@ -2,7 +2,7 @@ import random
 from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
-from ..baserow_client import users_table
+from ..baserow_client.user import User
 from baserowapi import Filter
 import datetime
 from django.core.mail import send_mail
@@ -14,7 +14,7 @@ from django.conf import settings
 def request_code(request):
     email = request.data.get('email')
     # Check if email exists
-    user = users_table.get_rows(filters=[Filter("email", email)], return_single=True)
+    user = User.table.get_rows(filters=[Filter("email", email)], return_single=True)
     if not user:
         return Response({"message": "Email not found"}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 

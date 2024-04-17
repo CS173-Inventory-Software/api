@@ -7,7 +7,12 @@ import dotenv
 
 def main():
     """Run administrative tasks."""
-    dotenv.read_dotenv()
+
+    env = ".env"
+    if "pytest" in sys.modules:
+        env = ".env.test"
+
+    dotenv.read_dotenv(env)
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'inventory.settings')
     try:
         from django.core.management import execute_from_command_line

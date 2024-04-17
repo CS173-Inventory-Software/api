@@ -6,7 +6,7 @@ from rest_framework import serializers
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
-from .baserow_client import users_table
+from .baserow_client.user import User
 from baserowapi import Filter
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
@@ -35,7 +35,7 @@ class CustomAuthTokenSerializer(serializers.Serializer):
         code = attrs.get('code')
 
         if email and code:
-            user = users_table.get_rows(filters=[Filter("email", email)], return_single=True)
+            user = User.table.get_rows(filters=[Filter("email", email)], return_single=True)
 
             if not user or code != user['auth_code']:
                 msg = _('Unable to log in with provided credentials.')

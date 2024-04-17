@@ -1,10 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
-from ..baserow_client import status_table, get_baserow_operator
 from ..baserow_client.user import UserType
 from baserowapi import Filter
-import json
 
 class UserTypeList(APIView):
     def get(self, request, format=None):

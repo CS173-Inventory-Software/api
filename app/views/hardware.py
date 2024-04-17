@@ -1,8 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
-from ..baserow_client import hardware_table, hardware_instance_table, get_baserow_operator
+from ..baserow_client import get_baserow_operator
 from ..baserow_client.assignment_log import AssignmentLog
+from ..baserow_client.hardware import Hardware, HardwareInstance
 from baserowapi import Filter
 import json
 from django.http import Http404
@@ -41,7 +42,7 @@ class HardwareList(APIView):
         if len(filters) > 0:
             kwargs['filters'] = filters
         
-        rows = hardware_table.get_rows(**kwargs)
+        rows = Hardware.table.get_rows(**kwargs)
 
         row_counter = 0
         for row in rows:
@@ -63,7 +64,7 @@ class HardwareList(APIView):
             'model_number': request.data.get('model_number'),
             'description': request.data.get('description'),
         }
-        added_row = hardware_table.add_row(new_row)
+        added_row = Hardware.table.add_row(new_row)
         new_id = added_row.id
 
         # Instances
@@ -78,7 +79,7 @@ class HardwareList(APIView):
             if instance.get("assignee"):
                 new_instance_row['assignee'] = [instance.get('assignee')]
                 # Add assignment log
-            hardware_instance_row = hardware_instance_table.add_row(new_instance_row)
+            hardware_instance_row = HardwareInstance.table.add_row(new_instance_row)
             if instance.get("assignee"):
                 AssignmentLog.assign({
                     'user': [instance.get('assignee')],
@@ -89,13 +90,13 @@ class HardwareList(APIView):
 class HardwareDetail(APIView):
     def get(self, request, pk, format=None):
         try:
-            row = hardware_table.get_row(pk)
+            row = Hardware.table.get_row(pk)
             data = row.content
             data['id'] = row.id
 
             # Instances
 
-            rows = hardware_instance_table.get_rows(filters=[Filter('hardware', pk, 'link_row_has')])
+            rows = HardwareInstance.table.get_rows(filters=[Filter('hardware', pk, 'link_row_has')])
             instances = []
             for row in rows:
                 instance = row.content
@@ -117,7 +118,7 @@ class HardwareDetail(APIView):
             raise Http404
 
     def put(self, request, pk, format=None):
-        row = hardware_table.get_row(pk)
+        row = Hardware.table.get_row(pk)
         row['name'] = request.data.get('name')
         row['brand'] = request.data.get('brand')
         row['type'] = request.data.get('type')
@@ -127,7 +128,7 @@ class HardwareDetail(APIView):
 
         instances_to_delete = request.data.get('one2m').get('instances').get('delete')
         for instance in instances_to_delete:
-            hardware_instance_table.get_row(instance).delete()
+            HardwareInstance.table.get_row(instance).delete()
 
         instances = request.data.get('one2m').get('instances').get('data')
         for instance in instances:
@@ -135,7 +136,7 @@ class HardwareDetail(APIView):
                 if instance['id'] in instances_to_delete:
                     continue
 
-                instance_row = hardware_instance_table.get_row(instance['id'])
+                instance_row = HardwareInstance.table.get_row(instance['id'])
                 instance_row['serial_number'] = instance['serial_number']
                 instance_row['procurement_date'] = instance['procurement_date']
                 if instance.get('status'):
@@ -178,7 +179,7 @@ class HardwareDetail(APIView):
                 if instance.get('assignee'):
                     new_instance_row['assignee'] = [instance.get('assignee')]
 
-                hardware_instance_row = hardware_instance_table.add_row(new_instance_row)
+                hardware_instance_row = HardwareInstance.table.add_row(new_instance_row)
 
                 if instance.get('assignee'):
                     AssignmentLog.assign(instance['assignee'], hardware=hardware_instance_row.id)

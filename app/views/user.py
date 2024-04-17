@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
-from ..baserow_client import users_table, get_baserow_operator
+from ..baserow_client import get_baserow_operator
 from ..baserow_client.user import User, UserType
 from baserowapi import Filter
 import json
@@ -41,7 +41,7 @@ class UserList(APIView):
         if len(filters) > 0:
             kwargs['filters'] = filters
         
-        rows = users_table.get_rows(**kwargs)
+        rows = User.table.get_rows(**kwargs)
 
         row_counter = 0
         for row in rows:

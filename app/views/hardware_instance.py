@@ -1,7 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
-from ..baserow_client import hardware_table, hardware_instance_table, get_baserow_operator
+from ..baserow_client import get_baserow_operator
+from ..baserow_client.hardware import HardwareInstance
 from baserowapi import Filter
 import json
 from django.http import Http404
@@ -40,7 +41,7 @@ class HardwareInstanceList(APIView):
         if len(filters) > 0:
             kwargs['filters'] = filters
         
-        rows = hardware_instance_table.get_rows(**kwargs)
+        rows = HardwareInstance.table.get_rows(**kwargs)
 
         row_counter = 0
         for row in rows:
