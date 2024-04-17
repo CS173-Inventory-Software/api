@@ -2,7 +2,7 @@ from . import baserow, BASEROW_TABLE_MAP
 from enum import Enum
 
 class User:
-    table = baserow.get_table(BASEROW_TABLE_MAP['USER'])
+    table = baserow.get_table(BASEROW_TABLE_MAP['USERS'])
 
     @classmethod
     def create(cls, email: str, type: int):
@@ -17,7 +17,7 @@ class User:
 
 
 class UserType:
-    table = baserow.get_table(BASEROW_TABLE_MAP['USER_TYPE'])
+    table = baserow.get_table(BASEROW_TABLE_MAP['USER_TYPES'])
 
 class UserTypeEnum(Enum):
     _ignore_ = ['table']

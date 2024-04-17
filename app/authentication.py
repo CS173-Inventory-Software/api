@@ -8,7 +8,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from .baserow_client.user import User
 from baserowapi import Filter
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User as UserModel
 from django.core.exceptions import ObjectDoesNotExist
 from .models import Role
 
@@ -51,9 +51,9 @@ class CustomAuthTokenSerializer(serializers.Serializer):
         # check if the user exists in the django db
 
         try:
-            django_user = User.objects.get(email=email)
+            django_user = UserModel.objects.get(email=email)
         except ObjectDoesNotExist:
-            django_user = User.objects.create_user(username=email, email=email, password="")
+            django_user = UserModel.objects.create_user(username=email, email=email, password="")
 
         Role.objects.update_or_create({'role': user.values['type'].id}, user=django_user)
 

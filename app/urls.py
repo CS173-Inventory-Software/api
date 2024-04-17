@@ -25,7 +25,7 @@ urlpatterns = [
 
     # Users
     path('users/', user.UserList.as_view()),
-    path('users/<int:pk>', user.UserDetail.as_view()),
+    path('users/<int:pk>/', user.UserDetail.as_view()),
 
     # User Types
     path('user-types/', user_type.UserTypeList.as_view()),

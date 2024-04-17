@@ -172,9 +172,11 @@ class HardwareDetail(APIView):
                 new_instance_row = {
                     'serial_number': instance.get('serial_number'),
                     'procurement_date': instance.get('procurement_date'),
-                    'status': [instance.get('status')],
                     'hardware': [pk],
                 }
+
+                if instance.get('status'):
+                    new_instance_row['status'] = [instance.get('status')]
 
                 if instance.get('assignee'):
                     new_instance_row['assignee'] = [instance.get('assignee')]

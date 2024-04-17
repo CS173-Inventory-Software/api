@@ -91,6 +91,7 @@ class SoftwareList(APIView):
                 'start': subscription.get('start'),
                 'end': subscription.get('end'),
                 'software': [new_id],
+                'number_of_licenses': int(subscription.get('number_of_licenses')),
             }
             SoftwareSubscription.table.add_row(new_subscription_row)
         return Response({'data': new_id}, status=status.HTTP_201_CREATED)
@@ -194,9 +195,11 @@ class SoftwareDetail(APIView):
             else:
                 new_instance_row = {
                     'serial_key': instance.get('serial_key'),
-                    'status': [instance.get('status')],
                     'software': [pk],
                 }
+
+                if instance.get('status'):
+                    new_instance_row['status'] = [instance.get('status')]
 
                 if instance.get('assignee'):
                     new_instance_row['assignee'] = [instance.get('assignee')]
@@ -221,6 +224,7 @@ class SoftwareDetail(APIView):
                 subscription_row = SoftwareSubscription.table.get_row(subscription['id'])
                 subscription_row['start'] = subscription['start']
                 subscription_row['end'] = subscription['end']
+                subscription_row['number_of_licenses'] = int(subscription['number_of_licenses'])
                 subscription_row.update()
 
             else:
