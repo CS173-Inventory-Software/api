@@ -13,12 +13,6 @@ import sys
 import dotenv
 from django.core.wsgi import get_wsgi_application
 
-env = ".env"
-if "pytest" in sys.modules:
-    env = ".env.test"
-
-dotenv.read_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), env))
-
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'inventory.settings')
 
 application = get_wsgi_application()
