@@ -14,4 +14,7 @@ async def login(async_client, email='root@mail.com'):
         'email': email,
         'code': '9999'
     })
-    return response
+
+    token = response.json().get('token')
+
+    return token

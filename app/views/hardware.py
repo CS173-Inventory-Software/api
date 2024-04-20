@@ -7,8 +7,13 @@ from ..baserow_client.hardware import Hardware, HardwareInstance
 from baserowapi import Filter
 import json
 from django.http import Http404
-
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+from ..baserow_client.user import UserTypeEnum
 class HardwareList(APIView):
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, format=None):
         hardware = []
         search: dict = json.loads(request.query_params['search'])
@@ -57,6 +62,8 @@ class HardwareList(APIView):
         return Response({'data': hardware, 'totalRecords': row_counter}, status=status.HTTP_200_OK)
 
     def post(self, request, format=None):
+        if request.user.role.role not in [UserTypeEnum.ADMIN.value, UserTypeEnum.SUPER_ADMIN.value, UserTypeEnum.ROOT_ADMIN.value]:
+            return Response({'message': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
         new_row = {
             'name': request.data.get('name'),
             'brand': request.data.get('brand'),
@@ -88,6 +95,9 @@ class HardwareList(APIView):
         return Response({'data': new_id}, status=status.HTTP_201_CREATED)
 
 class HardwareDetail(APIView):
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, pk, format=None):
         try:
             row = Hardware.table.get_row(pk)
@@ -118,17 +128,21 @@ class HardwareDetail(APIView):
             raise Http404
 
     def put(self, request, pk, format=None):
+        if request.user.role.role == UserTypeEnum.VIEWER.value:
+            return Response({'message': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
         row = Hardware.table.get_row(pk)
-        row['name'] = request.data.get('name')
-        row['brand'] = request.data.get('brand')
-        row['type'] = request.data.get('type')
-        row['model_number'] = request.data.get('model_number')
-        row['description'] = request.data.get('description')
-        row.update()
-
         instances_to_delete = request.data.get('one2m').get('instances').get('delete')
-        for instance in instances_to_delete:
-            HardwareInstance.table.get_row(instance).delete()
+
+        if request.user.role.role in [UserTypeEnum.ADMIN.value, UserTypeEnum.SUPER_ADMIN.value, UserTypeEnum.ROOT_ADMIN.value]:
+            row['name'] = request.data.get('name')
+            row['brand'] = request.data.get('brand')
+            row['type'] = request.data.get('type')
+            row['model_number'] = request.data.get('model_number')
+            row['description'] = request.data.get('description')
+            row.update()
+
+            for instance in instances_to_delete:
+                HardwareInstance.table.get_row(instance).delete()
 
         instances = request.data.get('one2m').get('instances').get('data')
         for instance in instances:
@@ -137,13 +151,11 @@ class HardwareDetail(APIView):
                     continue
 
                 instance_row = HardwareInstance.table.get_row(instance['id'])
-                instance_row['serial_number'] = instance['serial_number']
-                instance_row['procurement_date'] = instance['procurement_date']
-                if instance.get('status'):
-                    instance_row['status'] = [instance['status']]
-
-                current_assignee = instance_row['assignee']
-                assignment_type = None
+                if request.user.role.role in [UserTypeEnum.ADMIN.value, UserTypeEnum.SUPER_ADMIN.value, UserTypeEnum.ROOT_ADMIN.value]:
+                    instance_row['serial_number'] = instance['serial_number']
+                    instance_row['procurement_date'] = instance['procurement_date']
+                    if instance.get('status'):
+                        instance_row['status'] = [instance['status']]
 
                 # Check if the new assignee is set and the current assignee is not set
                 # Assign
@@ -169,6 +181,10 @@ class HardwareDetail(APIView):
 
                 instance_row.update()
             else:
+
+                if request.user.role.role not in [UserTypeEnum.ADMIN.value, UserTypeEnum.SUPER_ADMIN.value, UserTypeEnum.ROOT_ADMIN.value]:
+                    continue
+
                 new_instance_row = {
                     'serial_number': instance.get('serial_number'),
                     'procurement_date': instance.get('procurement_date'),
