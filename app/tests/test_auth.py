@@ -1,23 +1,8 @@
 from app.baserow_client.user import User
-from app.baserow_client import BASEROW_TABLE_MAP
 from baserowapi import Filter
 import datetime
 import pytest
-import os
-
-async def login(async_client, email='root@mail.com'):
-    user = User.table.get_rows(
-        filters=[Filter("email", email)], 
-        return_single=True
-    )
-    five_minutes_from_now = datetime.datetime.now() + datetime.timedelta(minutes=5)
-    user.update({"auth_code": '9999', "auth_expiry": five_minutes_from_now})
-
-    response = await async_client.post("/login/", {
-        'email': email,
-        'code': '9999'
-    })
-    return response
+from . import login
 
 @pytest.mark.django_db
 @pytest.mark.asyncio
