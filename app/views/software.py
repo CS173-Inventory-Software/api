@@ -258,3 +258,12 @@ class SoftwareDetail(APIView):
                 SoftwareSubscription.create(pk, subscription.get('start'), subscription.get('end'), int(subscription.get('number_of_licenses')))
 
         return Response({'message': 'successful'})
+
+    def delete(self, request, pk, format=None):
+        if request.user.role.role not in [UserTypeEnum.ADMIN.value, UserTypeEnum.SUPER_ADMIN.value, UserTypeEnum.ROOT_ADMIN.value]:
+            return Response({'message': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        row = Software.table.get_row(pk)
+        row.delete()
+
+        return Response({'message': 'Successful'}, status=status.HTTP_204_NO_CONTENT)

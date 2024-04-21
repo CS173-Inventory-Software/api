@@ -377,3 +377,23 @@ async def test_hardware_instance_read_when_logged_in(async_client, email):
         headers={'Authorization': f'Token {token}'}
         )
     assert response.status_code == 200
+
+@pytest.mark.parametrize('email', ['viewer@mail.com', 'clerk@mail.com'])
+@pytest.mark.django_db
+@pytest.mark.asyncio
+async def test_hardware_delete_when_unauthorised(async_client, email):
+    token = await login(async_client, email)
+    response = await async_client.delete('/hardware/1/', headers={'Authorization': f'Token {token}'})
+    assert response.status_code == 401
+
+@pytest.mark.parametrize('email', ['admin@mail.com', 'super@mail.com', 'root@mail.com'])
+@pytest.mark.django_db
+@pytest.mark.asyncio
+async def test_hardware_delete_when_authorised(async_client, email):
+    token = await login(async_client, email)
+    hardware = create_hardware()
+    response = await async_client.delete(f'/hardware/{hardware.id}/', headers={'Authorization': f'Token {token}'})
+    assert response.status_code == 204
+
+    response = await async_client.get(f'/hardware/{hardware.id}/', headers={'Authorization': f'Token {token}'})
+    assert response.status_code == 404

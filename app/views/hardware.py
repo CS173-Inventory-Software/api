@@ -203,3 +203,12 @@ class HardwareDetail(APIView):
                     AssignmentLog.assign(instance['assignee'], hardware=hardware_instance_row.id)
 
         return Response({'message': 'successful'})
+
+    def delete(self, request, pk, format=None):
+        if request.user.role.role not in [UserTypeEnum.ADMIN.value, UserTypeEnum.SUPER_ADMIN.value, UserTypeEnum.ROOT_ADMIN.value]:
+            return Response({'message': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        row = Hardware.table.get_row(pk)
+        row.delete()
+
+        return Response({'message': 'Successful'}, status=status.HTTP_204_NO_CONTENT)
