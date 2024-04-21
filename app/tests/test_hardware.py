@@ -50,60 +50,19 @@ async def test_hardware_post_when_not_logged_in(async_client):
     response = await async_client.post('/hardware/')
     assert response.status_code == 403
 
+@pytest.mark.parametrize('email', ['viewer@mail.com', 'clerk@mail.com',])
 @pytest.mark.django_db
 @pytest.mark.asyncio
-async def test_hardware_post_when_viewer(async_client):
-    token = await login(async_client, 'viewer@mail.com')
+async def test_hardware_post_when_non_admin(async_client, email):
+    token = await login(async_client, email)
     response = await async_client.post('/hardware/', headers={'Authorization': f'Token {token}'})
     assert response.status_code == 401
 
+@pytest.mark.parametrize('email', ['admin@mail.com', 'super@mail.com', 'root@mail.com'])
 @pytest.mark.django_db
 @pytest.mark.asyncio
-async def test_hardware_post_when_inventory_clerk(async_client):
-    token = await login(async_client, 'clerk@mail.com')
-    response = await async_client.post('/hardware/', headers={'Authorization': f'Token {token}'})
-    assert response.status_code == 401
-
-@pytest.mark.django_db
-@pytest.mark.asyncio
-async def test_hardware_post_when_admin(async_client):
-    token = await login(async_client, 'admin@mail.com')
-    response = await async_client.post('/hardware/', {
-        'name': 'Test Hardware',
-        'brand': 'Test Brand',
-        'type': 'Test Type',
-        'model_number': 'Test Model Number',
-        'description': 'Test Description',
-        'one2m': {
-            'instances': {
-                'data': []
-            }
-        }
-    }, headers={'Authorization': f'Token {token}'}, content_type='application/json')
-    assert response.status_code == 201
-
-@pytest.mark.django_db
-@pytest.mark.asyncio
-async def test_hardware_post_when_super_admin(async_client):
-    token = await login(async_client, 'super@mail.com')
-    response = await async_client.post('/hardware/', {
-        'name': 'Test Hardware',
-        'brand': 'Test Brand',
-        'type': 'Test Type',
-        'model_number': 'Test Model Number',
-        'description': 'Test Description',
-        'one2m': {
-            'instances': {
-                'data': []
-            }
-        }
-    }, headers={'Authorization': f'Token {token}'}, content_type='application/json')
-    assert response.status_code == 201
-
-@pytest.mark.django_db
-@pytest.mark.asyncio
-async def test_hardware_post_when_root_admin(async_client):
-    token = await login(async_client, 'root@mail.com')
+async def test_hardware_post_when_admin(async_client, email):
+    token = await login(async_client, email)
     response = await async_client.post('/hardware/', {
         'name': 'Test Hardware',
         'brand': 'Test Brand',
