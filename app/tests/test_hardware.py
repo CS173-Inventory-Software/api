@@ -22,10 +22,11 @@ async def test_hardware_read_when_not_logged_in(async_client):
     response = await async_client.get('/hardware/1/')
     assert response.status_code == 403
 
+@pytest.mark.parametrize('email', ['viewer@mail.com', 'clerk@mail.com', 'admin@mail.com', 'super@mail.com', 'root@mail.com'])
 @pytest.mark.django_db
 @pytest.mark.asyncio
-async def test_hardware_read_when_logged_in(async_client):
-    token = await login(async_client)
+async def test_hardware_read_when_logged_in(async_client, email):
+    token = await login(async_client, email)
     hardware = create_hardware()
     response = await async_client.get(
         f'/hardware/{hardware.id}/', 
