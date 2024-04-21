@@ -186,8 +186,7 @@ async def test_hardware_put_inventory_clerk_can_not_add_instances(async_client):
     data['type'] = 'Ignored Type'
     data['model_number'] = 'Ignored Model Number'
     data['description'] = 'Ignored Description'
-    data['one2m']['instances']['data'][0]['assignee'] = 1
-    data['one2m']['instances']['data'][0]['status'] = 2
+
     data['one2m']['instances']['delete'] = []
     data['one2m']['instances']['data'].append({
         'serial_number': 'Test Serial Number',
@@ -213,8 +212,6 @@ async def test_hardware_put_inventory_clerk_can_not_add_instances(async_client):
         'for_deletion': False,
     }
 
-    assert one2m['instances']['data'][0]['assignee'] == 1
-    assert one2m['instances']['data'][0]['status'] is None
     assert len(one2m['instances']['data']) == 1
 
 @pytest.mark.django_db

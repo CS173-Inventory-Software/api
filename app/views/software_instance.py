@@ -6,8 +6,13 @@ from ..baserow_client.software import Software, SoftwareInstance
 from baserowapi import Filter
 import json
 from django.http import Http404
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 class SoftwareInstanceList(APIView):
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, format=None):
         software = []
         search: dict = json.loads(request.query_params['search'])

@@ -4,11 +4,17 @@ from rest_framework.response import Response
 from ..baserow_client import get_baserow_operator
 from ..baserow_client.software import Software, SoftwareInstance, SoftwareSubscription
 from ..baserow_client.assignment_log import AssignmentLog
+from ..baserow_client.user import UserTypeEnum
 from baserowapi import Filter
 import json
 from django.http import Http404
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 class SoftwareList(APIView):
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    
     def get(self, request, format=None):
         software = []
         search: dict = json.loads(request.query_params['search'])
@@ -55,6 +61,8 @@ class SoftwareList(APIView):
         return Response({'data': software, 'totalRecords': row_counter}, status=status.HTTP_200_OK)
 
     def post(self, request, format=None):
+        if request.user.role.role not in [UserTypeEnum.ADMIN.value, UserTypeEnum.SUPER_ADMIN.value, UserTypeEnum.ROOT_ADMIN.value]:
+            return Response({'message': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
         new_row = {
             'name': request.data.get('name'),
             'brand': request.data.get('brand'),
@@ -97,6 +105,9 @@ class SoftwareList(APIView):
         return Response({'data': new_id}, status=status.HTTP_201_CREATED)
 
 class SoftwareDetail(APIView):
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, pk, format=None):
         try:
             row = Software.table.get_row(pk)
@@ -123,6 +134,7 @@ class SoftwareDetail(APIView):
                 subscription = row.content
                 subscription['id'] = row.id
                 subscription['software'] = row.values['software'].id
+                subscription['number_of_licenses'] = int(subscription['number_of_licenses'])
                 subscriptions.append(subscription)
 
 
@@ -141,19 +153,23 @@ class SoftwareDetail(APIView):
             raise Http404
 
     def put(self, request, pk, format=None):
+        if request.user.role.role == UserTypeEnum.VIEWER.value:
+            return Response({'message': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
         row = Software.table.get_row(pk)
-        row['name'] = request.data.get('name')
-        row['brand'] = request.data.get('brand')
-        row['version_number'] = request.data.get('version_number')
-        row['description'] = request.data.get('description')
-        row['expiration_date'] = request.data.get('expiration_date')
-        row.update()
+        instances_to_delete = request.data.get('one2m').get('instances').get('delete')
+
+        if request.user.role.role in [UserTypeEnum.ADMIN.value, UserTypeEnum.SUPER_ADMIN.value, UserTypeEnum.ROOT_ADMIN.value]:
+            row['name'] = request.data.get('name')
+            row['brand'] = request.data.get('brand')
+            row['version_number'] = request.data.get('version_number')
+            row['description'] = request.data.get('description')
+            row['expiration_date'] = request.data.get('expiration_date')
+            row.update()
+
+            for instance in instances_to_delete:
+                SoftwareInstance.table.get_row(instance).delete()
 
         # Instances
-
-        instances_to_delete = request.data.get('one2m').get('instances').get('delete')
-        for instance in instances_to_delete:
-            SoftwareInstance.table.get_row(instance).delete()
 
         instances = request.data.get('one2m').get('instances').get('data')
         for instance in instances:
@@ -162,9 +178,11 @@ class SoftwareDetail(APIView):
                     continue
 
                 instance_row = SoftwareInstance.table.get_row(instance['id'])
-                instance_row['serial_key'] = instance['serial_key']
-                if instance.get('status'):
-                    instance_row['status'] = [instance['status']]
+
+                if request.user.role.role in [UserTypeEnum.ADMIN.value, UserTypeEnum.SUPER_ADMIN.value, UserTypeEnum.ROOT_ADMIN.value]:
+                    instance_row['serial_key'] = instance['serial_key']
+                    if instance.get('status'):
+                        instance_row['status'] = [instance['status']]
 
                 current_assignee = instance_row['assignee']
                 assignment_type = None
@@ -193,6 +211,10 @@ class SoftwareDetail(APIView):
 
                 instance_row.update()
             else:
+
+                if request.user.role.role not in [UserTypeEnum.ADMIN.value, UserTypeEnum.SUPER_ADMIN.value, UserTypeEnum.ROOT_ADMIN.value]:
+                    continue
+
                 new_instance_row = {
                     'serial_key': instance.get('serial_key'),
                     'software': [pk],
@@ -212,28 +234,27 @@ class SoftwareDetail(APIView):
         # Subscriptions
 
         subscriptions_to_delete = request.data.get('one2m').get('subscriptions').get('delete')
-        for subscription in subscriptions_to_delete:
-            SoftwareInstance.table.get_row(subscription).delete()
+        if request.user.role.role in [UserTypeEnum.ADMIN.value, UserTypeEnum.SUPER_ADMIN.value, UserTypeEnum.ROOT_ADMIN.value]:
+            for subscription in subscriptions_to_delete:
+                SoftwareSubscription.table.get_row(subscription).delete()
 
         subscriptions = request.data.get('one2m').get('subscriptions').get('data')
         for subscription in subscriptions:
             if 'id' in subscription:
-                if subscription['id'] in subscriptions_to_delete:
+                if subscription['id'] in subscriptions_to_delete or request.user.role.role not in [UserTypeEnum.ADMIN.value, UserTypeEnum.SUPER_ADMIN.value, UserTypeEnum.ROOT_ADMIN.value]:
                     continue
 
                 subscription_row = SoftwareSubscription.table.get_row(subscription['id'])
+
                 subscription_row['start'] = subscription['start']
                 subscription_row['end'] = subscription['end']
                 subscription_row['number_of_licenses'] = int(subscription['number_of_licenses'])
                 subscription_row.update()
 
             else:
-                new_subscription_row = {
-                    'start': subscription.get('start'),
-                    'end': subscription.get('end'),
-                    'software': [pk],
-                }
+                if request.user.role.role not in [UserTypeEnum.ADMIN.value, UserTypeEnum.SUPER_ADMIN.value, UserTypeEnum.ROOT_ADMIN.value]:
+                    continue
 
-                SoftwareInstance.table.add_row(new_subscription_row)
+                SoftwareSubscription.create(pk, subscription.get('start'), subscription.get('end'), int(subscription.get('number_of_licenses')))
 
         return Response({'message': 'successful'})
