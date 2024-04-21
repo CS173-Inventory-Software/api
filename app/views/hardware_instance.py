@@ -6,8 +6,14 @@ from ..baserow_client.hardware import HardwareInstance
 from baserowapi import Filter
 import json
 from django.http import Http404
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 class HardwareInstanceList(APIView):
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, format=None):
         hardware = []
         search: dict = json.loads(request.query_params['search'])
