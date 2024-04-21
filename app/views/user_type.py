@@ -3,8 +3,13 @@ from rest_framework import status
 from rest_framework.response import Response
 from ..baserow_client.user import UserType
 from baserowapi import Filter
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 class UserTypeList(APIView):
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, format=None):
         entities = []
 

@@ -2,12 +2,17 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
 from ..baserow_client import get_baserow_operator
-from ..baserow_client.user import User, UserType
+from ..baserow_client.user import User, UserType, UserTypeEnum
 from baserowapi import Filter
 import json
 from django.http import Http404
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 class UserList(APIView):
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    
     def get(self, request, format=None):
         users = []
         search: dict = json.loads(request.query_params['search'])
@@ -54,6 +59,9 @@ class UserList(APIView):
         return Response({'data': users, 'totalRecords': row_counter}, status=status.HTTP_200_OK)
 
     def post(self, request, format=None):
+        if request.user.role.role not in [UserTypeEnum.SUPER_ADMIN.value, UserTypeEnum.ROOT_ADMIN.value]:
+            return Response({'message': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+
         added_row = User.create(
             request.data.get('email'), 
             request.data.get('type')
@@ -62,6 +70,9 @@ class UserList(APIView):
         return Response({'data': added_row.id}, status=status.HTTP_201_CREATED)
 
 class UserDetail(APIView):
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    
     def get(self, request, pk, format=None):
         try:
             row = User.table.get_row(pk)
@@ -71,11 +82,31 @@ class UserDetail(APIView):
         data = row.content
         data['id'] = row.id
         data['type'] = row.values['type'].id
+        del data['auth_code']
+        del data['auth_expiry']
         return Response({'data': data})
 
     def put(self, request, pk, format=None):
+        if request.user.role.role not in [UserTypeEnum.SUPER_ADMIN.value, UserTypeEnum.ROOT_ADMIN.value]:
+            return Response({'message': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if request.data.get('type') not in [UserTypeEnum.VIEWER.value, UserTypeEnum.CLERK.value, UserTypeEnum.ADMIN.value, UserTypeEnum.SUPER_ADMIN.value]:
+            return Response({'message': 'Invalid user type'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
         row = User.table.get_row(pk)
         row['email'] = request.data.get('email')
         row['type'] = [request.data.get('type')]
         row.update()
         return Response({'message': 'Successful'})
+    
+    def delete(self, request, pk, format=None):
+        if request.user.role.role not in [UserTypeEnum.SUPER_ADMIN.value, UserTypeEnum.ROOT_ADMIN.value]:
+            return Response({'message': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        row = User.table.get_row(pk)
+        if row.values['type'].id == UserTypeEnum.ROOT_ADMIN.value or (row.values['type'].id == UserTypeEnum.SUPER_ADMIN.value and request.user.role.role != UserTypeEnum.ROOT_ADMIN.value):
+            return Response({'message': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        row.delete()
+
+        return Response({'message': 'Successful'}, status=status.HTTP_204_NO_CONTENT)
