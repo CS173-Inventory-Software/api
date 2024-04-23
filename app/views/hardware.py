@@ -139,10 +139,12 @@ class HardwareDetail(APIView):
             row['type'] = request.data.get('type')
             row['model_number'] = request.data.get('model_number')
             row['description'] = request.data.get('description')
-            row.update()
 
             for instance in instances_to_delete:
                 HardwareInstance.table.get_row(instance).delete()
+
+        row['for_deletion'] = request.data.get('for_deletion')
+        row.update()
 
         instances = request.data.get('one2m').get('instances').get('data')
         for instance in instances:

@@ -67,7 +67,7 @@ async def test_get_user(async_client):
 
     response = await async_client.get("/get-user/", headers={'Authorization': f'Token {token}'})
 
-    assert response.json() == {'email': 'root@mail.com'}
+    assert response.json() == {'email': 'root@mail.com', 'role': 1}
 
 @pytest.mark.django_db
 @pytest.mark.asyncio

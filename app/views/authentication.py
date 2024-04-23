@@ -1,3 +1,4 @@
+import os
 import random
 from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -29,12 +30,13 @@ def request_code(request):
     # Update user
     user.update({"auth_code": code, "auth_expiry": five_minutes_from_now})
 
-    send_mail(
-        "Company Inventory Login Code",
-        code,
-        "noreply@mail.kimpalao.com",
-        [email],
-    )
+    if os.environ.get('APP_ENV') != 'test':
+        send_mail(
+            "Company Inventory Login Code",
+            code,
+            "noreply@mail.kimpalao.com",
+            [email],
+        )
 
     response_data = {"message": "Code sent"}
 
@@ -57,4 +59,4 @@ def logout(request):
 @permission_classes([IsAuthenticated])
 def get_user(request):
     user = request.user
-    return Response({"email": user.email}, status=status.HTTP_200_OK)
+    return Response({"email": user.email, 'role': user.role.role}, status=status.HTTP_200_OK)

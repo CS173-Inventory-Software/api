@@ -16,9 +16,10 @@ from dotenv import load_dotenv
 import sys
 
 env = ".env"
-if "pytest" in sys.modules:
+if "pytest" in sys.modules or "--test" in sys.argv:
     env = ".env.test"
 
+print("Reading env file: ", env)
 load_dotenv(env, override=True)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
