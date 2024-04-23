@@ -6,6 +6,16 @@ from . import login
 
 @pytest.mark.django_db
 @pytest.mark.asyncio
+async def test_request_code_without_email(async_client):
+    response = await async_client.post("/request-code/", {
+        'email': '',
+    })
+    assert response.status_code == 422
+    data = response.json()
+    assert data['errors'] == {'email': ['This field is required.']}
+
+@pytest.mark.django_db
+@pytest.mark.asyncio
 async def test_login(async_client):
     user = User.table.get_rows(
         filters=[Filter("email", 'root@mail.com')], 
