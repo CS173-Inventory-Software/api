@@ -12,7 +12,7 @@ async def test_request_code_without_email(async_client):
     })
     assert response.status_code == 422
     data = response.json()
-    assert data['errors'] == {'email': ['This field is required.']}
+    assert data['errors'] == {'email': ['This field may not be blank.']}
 
 @pytest.mark.django_db
 @pytest.mark.asyncio

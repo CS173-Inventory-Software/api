@@ -72,11 +72,40 @@ async def test_hardware_post_when_admin(async_client, email):
         'description': 'Test Description',
         'one2m': {
             'instances': {
-                'data': []
+                'data': [
+                    {
+                        'serial_number': 'Test Serial Number',
+                        'procurement_date': '2021-01-01',
+                    }
+                ]
             }
         }
     }, headers={'Authorization': f'Token {token}'}, content_type='application/json')
     assert response.status_code == 201
+
+@pytest.mark.parametrize('missing_field', ['name', 'brand', 'type', 'model_number', 'description'])
+@pytest.mark.django_db
+@pytest.mark.asyncio
+async def test_hardware_post_fields_missing(async_client, missing_field):
+    token = await login(async_client)
+    data = {        
+        'name': 'Test Hardware',
+        'brand': 'Test Brand',
+        'type': 'Test Type',
+        'model_number': 'Test Model Number',
+        'description': 'Test Description',
+        'one2m': {
+            'instances': {
+                'data': []
+            }
+        }
+    }
+
+    del data[missing_field]
+    response = await async_client.post('/hardware/', data, headers={'Authorization': f'Token {token}'}, content_type='application/json')
+    assert response.status_code == 422
+    data = response.json()
+    assert data['errors'] == {missing_field: ['This field is required.']}
 
 @pytest.mark.django_db
 @pytest.mark.asyncio

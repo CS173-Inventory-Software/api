@@ -10,13 +10,14 @@ from django.core.mail import send_mail
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from django.conf import settings
-from ..forms.authentication import RequestCodePostForm
+from ..serializers.authentication import RequestCodeSerializer
 
 @api_view(['POST'])
 def request_code(request):
-    form = RequestCodePostForm(request.data)
-    if not form.is_valid():
-        return Response({"message": "Invalid data", "errors": form.errors}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+    serializer = RequestCodeSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response({"message": "Invalid data", "errors": serializer.errors}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
     email = request.data.get('email')
     # Check if email exists
     user = User.table.get_rows(filters=[Filter("email", email)], return_single=True)

@@ -1,6 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
+
+from app.serializers.hardware import HardwareInstanceSerializer, HardwareSerializer
 from ..baserow_client import get_baserow_operator
 from ..baserow_client.assignment_log import AssignmentLog
 from ..baserow_client.hardware import Hardware, HardwareInstance
@@ -64,6 +66,21 @@ class HardwareList(APIView):
     def post(self, request, format=None):
         if request.user.role.role not in [UserTypeEnum.ADMIN.value, UserTypeEnum.SUPER_ADMIN.value, UserTypeEnum.ROOT_ADMIN.value]:
             return Response({'message': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+        errors = {}
+        hardware_serializer = HardwareSerializer(data=request.data)
+        if not hardware_serializer.is_valid():
+            errors.update(hardware_serializer.errors)
+
+        hardware_instance_serializer = HardwareInstanceSerializer(data=request.data.get('one2m').get('instances').get('data'), many=True)
+
+        if not hardware_instance_serializer.is_valid():
+            return Response({"message": "Invalid data", "errors": hardware_instance_serializer.errors}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+            errors.update(hardware_instance_serializer.errors)
+
+        if errors:
+            return Response({"message": "Invalid data", "errors": errors}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+        
         new_row = {
             'name': request.data.get('name'),
             'brand': request.data.get('brand'),
@@ -81,7 +98,7 @@ class HardwareList(APIView):
                 'serial_number': instance.get('serial_number'),
                 'procurement_date': instance.get('procurement_date'),
                 'hardware': [new_id],
-                'status': [instance.get('status')],
+                'status': [instance.get('status')] if instance.get('status') else [],
             }
             if instance.get("assignee"):
                 new_instance_row['assignee'] = [instance.get('assignee')]
