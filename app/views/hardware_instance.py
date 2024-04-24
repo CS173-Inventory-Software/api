@@ -1,3 +1,4 @@
+import csv
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
@@ -5,7 +6,7 @@ from ..baserow_client import get_baserow_operator
 from ..baserow_client.hardware import HardwareInstance
 from baserowapi import Filter
 import json
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -63,3 +64,45 @@ class HardwareInstanceList(APIView):
             data['id'] = row.id
             hardware.append(data)
         return Response({'data': hardware, 'totalRecords': row_counter}, status=status.HTTP_200_OK)
+
+
+    
+class HardwareCSV(APIView):
+
+    def get(self, request, format=None):
+        response = HardwareInstanceList.as_view()(request._request)
+
+        hardware = response.data['data']
+
+        response = HttpResponse(
+            content_type="text/csv",
+            headers={"Content-Disposition": 'attachment; filename="hardware.csv"'},
+        )
+
+        writer = csv.writer(response)
+        writer.writerow([
+            "ID",
+            "Name", 
+            "Brand", 
+            "Type", 
+            "Model Number", 
+            "Serial Number",
+            "Procurement Date",
+            "Status",
+            "Assignee",
+        ])
+
+        for row in hardware:
+            writer.writerow([
+                row['id'],
+                row['hardware_name'],
+                row['hardware_brand'],
+                row['hardware_type'],
+                row['hardware_model_number'],
+                row['serial_number'],
+                row['procurement_date'],
+                row['status_formula'],
+                row['assignee_formula'],
+            ])
+
+        return response
