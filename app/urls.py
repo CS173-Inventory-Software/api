@@ -23,6 +23,9 @@ urlpatterns = [
     path('software/<int:pk>/', software.SoftwareDetail.as_view()),
     path('software-instance/', software_instance.SoftwareInstanceList.as_view()),
 
+    path('software-csv/', software_instance.SoftwareCSV.as_view()),
+    path('software-json/', software_instance.SoftwareJSON.as_view()),
+
     # Status
     path('status/', status.StatusList.as_view()),
 

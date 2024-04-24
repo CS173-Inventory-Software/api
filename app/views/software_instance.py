@@ -1,3 +1,4 @@
+import csv
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
@@ -5,7 +6,7 @@ from ..baserow_client import get_baserow_operator
 from ..baserow_client.software import Software, SoftwareInstance
 from baserowapi import Filter
 import json
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
@@ -59,3 +60,77 @@ class SoftwareInstanceList(APIView):
             data['id'] = row.id
             software.append(data)
         return Response({'data': software, 'totalRecords': row_counter}, status=status.HTTP_200_OK)
+
+class SoftwareCSV(APIView):
+
+    def get(self, request, format=None):
+        response = SoftwareInstanceList.as_view()(request._request)
+
+        software = response.data['data']
+
+        response = HttpResponse(
+            content_type="text/csv",
+            headers={"Content-Disposition": 'attachment; filename="software.csv"'},
+        )
+
+        writer = csv.writer(response)
+        writer.writerow([
+            "ID",
+            "Name", 
+            "Brand", 
+            "Version Number", 
+            "Serial Key",
+            "Status",
+            "Assignee",
+        ])
+
+        for row in software:
+            writer.writerow([
+                row['id'],
+                row['software_name'],
+                row['software_brand'],
+                row['software_version_number'],
+                row['serial_key'],
+                row['status_formula'],
+                row['assignee_formula'],
+            ])
+
+        return response
+
+class SoftwareJSON(APIView):
+
+    def get(self, request, format=None):
+        response = SoftwareInstanceList.as_view()(request._request)
+
+        software = response.data['data']
+        total = response.data['totalRecords']
+
+        response = HttpResponse(
+            content_type="text/csv",
+            headers={"Content-Disposition": 'attachment; filename="software.csv"'},
+        )
+        
+
+        headers = [
+            "ID",
+            "Name", 
+            "Brand", 
+            "Version Number", 
+            "Serial Key",
+            "Status",
+            "Assignee",
+        ]
+        fields = [
+            "id",
+            "software_name",
+            "software_brand",
+            "software_version_number",
+            "serial_key",
+            "status_formula",
+            "assignee_formula",
+        ]
+
+        for row in software:
+            row = {header: row[field] for header, field in zip(headers, fields)}
+
+        return Response({'data': software, 'totalRecords': total}, status=status.HTTP_200_OK)
