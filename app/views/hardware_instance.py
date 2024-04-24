@@ -66,7 +66,6 @@ class HardwareInstanceList(APIView):
         return Response({'data': hardware, 'totalRecords': row_counter}, status=status.HTTP_200_OK)
 
 
-    
 class HardwareCSV(APIView):
 
     def get(self, request, format=None):
@@ -106,3 +105,45 @@ class HardwareCSV(APIView):
             ])
 
         return response
+
+class HardwareJSON(APIView):
+
+    def get(self, request, format=None):
+        response = HardwareInstanceList.as_view()(request._request)
+
+        hardware = response.data['data']
+        total = response.data['totalRecords']
+
+        response = HttpResponse(
+            content_type="text/csv",
+            headers={"Content-Disposition": 'attachment; filename="hardware.csv"'},
+        )
+        
+
+        headers = [
+            "ID",
+            "Name", 
+            "Brand", 
+            "Type", 
+            "Model Number", 
+            "Serial Number",
+            "Procurement Date",
+            "Status",
+            "Assignee",
+        ]
+        fields = [
+            'id',
+            'hardware_name',
+            'hardware_brand',
+            'hardware_type',
+            'hardware_model_number',
+            'serial_number',
+            'procurement_date',
+            'status_formula',
+            'assignee_formula',
+        ]
+
+        for row in hardware:
+            row = {header: row[field] for header, field in zip(headers, fields)}
+
+        return Response({'data': hardware, 'totalRecords': total}, status=status.HTTP_200_OK)

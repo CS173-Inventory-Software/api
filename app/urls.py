@@ -16,6 +16,7 @@ urlpatterns = [
     path('hardware-instance/', hardware_instance.HardwareInstanceList.as_view()),
 
     path('hardware-csv/', hardware_instance.HardwareCSV.as_view()),
+    path('hardware-json/', hardware_instance.HardwareJSON.as_view()),
 
     # Software
     path('software/', software.SoftwareList.as_view()),
