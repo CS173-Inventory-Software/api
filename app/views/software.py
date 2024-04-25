@@ -1,6 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
+
+from app.serializers.software import SoftwareInstanceSerializer, SoftwareSerializer, SoftwareSubscriptionSerializer
 from ..baserow_client import get_baserow_operator
 from ..baserow_client.software import Software, SoftwareInstance, SoftwareSubscription
 from ..baserow_client.assignment_log import AssignmentLog
@@ -63,6 +65,26 @@ class SoftwareList(APIView):
     def post(self, request, format=None):
         if request.user.role.role not in [UserTypeEnum.ADMIN.value, UserTypeEnum.SUPER_ADMIN.value, UserTypeEnum.ROOT_ADMIN.value]:
             return Response({'message': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        errors = {}
+
+        software_serializer = SoftwareSerializer(data=request.data)
+        if not software_serializer.is_valid():
+            errors.update(software_serializer.errors)
+
+        software_instance_serializer = SoftwareInstanceSerializer(data=request.data.get('one2m').get('instances').get('data'), many=True)
+
+        if not software_instance_serializer.is_valid():
+            errors['instances'] = software_instance_serializer.errors
+
+        software_subscription_serializer = SoftwareSubscriptionSerializer(data=request.data.get('one2m').get('subscriptions').get('data'), many=True)
+
+        if not software_subscription_serializer.is_valid():
+            errors['subscriptions'] = software_subscription_serializer.errors
+
+        if errors:
+            return Response({"message": "Invalid data", "errors": errors}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
         new_row = {
             'name': request.data.get('name'),
             'brand': request.data.get('brand'),
@@ -80,7 +102,7 @@ class SoftwareList(APIView):
             new_instance_row = {
                 'serial_key': instance.get('serial_key'),
                 'software': [new_id],
-                'status': [instance.get('status')],
+                'status': [instance.get('status')] if instance.get('status') else [],
             }
             if instance.get("assignee"):
                 new_instance_row['assignee'] = [instance.get('assignee')]
@@ -155,6 +177,26 @@ class SoftwareDetail(APIView):
     def put(self, request, pk, format=None):
         if request.user.role.role == UserTypeEnum.VIEWER.value:
             return Response({'message': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        errors = {}
+
+        software_serializer = SoftwareSerializer(data=request.data)
+        if not software_serializer.is_valid():
+            errors.update(software_serializer.errors)
+
+        software_instance_serializer = SoftwareInstanceSerializer(data=request.data.get('one2m').get('instances').get('data'), many=True)
+
+        if not software_instance_serializer.is_valid():
+            errors['instances'] = software_instance_serializer.errors
+
+        software_subscription_serializer = SoftwareSubscriptionSerializer(data=request.data.get('one2m').get('subscriptions').get('data'), many=True)
+
+        if not software_subscription_serializer.is_valid():
+            errors['subscriptions'] = software_subscription_serializer.errors
+
+        if errors:
+            return Response({"message": "Invalid data", "errors": errors}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
         row = Software.table.get_row(pk)
         instances_to_delete = request.data.get('one2m').get('instances').get('delete')
 

@@ -10,6 +10,6 @@ class HardwareSerializer(serializers.Serializer):
 class HardwareInstanceSerializer(serializers.Serializer):
     serial_number = serializers.CharField()
     procurement_date = serializers.DateField()
-    status = serializers.IntegerField(required=False)
-    assignee = serializers.IntegerField(required=False)
-    hardware = serializers.IntegerField(required=False)
+    status = serializers.IntegerField(required=False, allow_null=True)
+    assignee = serializers.IntegerField(required=False, allow_null=True)
+    hardware = serializers.IntegerField(required=False, allow_null=True)

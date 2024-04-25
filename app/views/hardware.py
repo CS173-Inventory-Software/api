@@ -79,7 +79,6 @@ class HardwareList(APIView):
         if errors:
             return Response({"message": "Invalid data", "errors": errors}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-        
         new_row = {
             'name': request.data.get('name'),
             'brand': request.data.get('brand'),
@@ -146,6 +145,21 @@ class HardwareDetail(APIView):
     def put(self, request, pk, format=None):
         if request.user.role.role == UserTypeEnum.VIEWER.value:
             return Response({'message': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        errors = {}
+
+        hardware_serializer = HardwareSerializer(data=request.data)
+        if not hardware_serializer.is_valid():
+            errors.update(hardware_serializer.errors)
+
+        hardware_instance_serializer = HardwareInstanceSerializer(data=request.data.get('one2m').get('instances').get('data'), many=True)
+
+        if not hardware_instance_serializer.is_valid():
+            errors['instances'] = hardware_instance_serializer.errors
+
+        if errors:
+            return Response({"message": "Invalid data", "errors": errors}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
         row = Hardware.table.get_row(pk)
         instances_to_delete = request.data.get('one2m').get('instances').get('delete')
 
