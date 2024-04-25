@@ -109,6 +109,67 @@ async def test_hardware_post_fields_missing(async_client, missing_field):
 
 @pytest.mark.django_db
 @pytest.mark.asyncio
+async def test_hardware_post_instance_fields_missing(async_client):
+    token = await login(async_client)
+    data = {
+        'name': 'Test Hardware',
+        'brand': 'Test Brand',
+        'type': 'Test Type',
+        'model_number': 'Test Model Number',
+        'description': 'Test Description',
+        'one2m': {
+            'instances': {
+                'data': [
+                    {
+                        'serial_number': 'Test Serial Number',
+                    },
+                    {
+                        'procurement_date': '2022-01-01',
+                    }
+                ],
+            }
+        }
+    }
+
+    response = await async_client.post('/hardware/', data, headers={'Authorization': f'Token {token}'}, content_type='application/json')
+    assert response.status_code == 422
+    data = response.json()
+    assert data['errors']['instances'] == [
+        {'procurement_date': ['This field is required.']},
+        {'serial_number': ['This field is required.']},
+    ]
+
+@pytest.mark.django_db
+@pytest.mark.asyncio
+async def test_hardware_post_instance_procurement_date_invalid(async_client):
+    token = await login(async_client)
+    data = {
+        'name': 'Test Hardware',
+        'brand': 'Test Brand',
+        'type': 'Test Type',
+        'model_number': 'Test Model Number',
+        'description': 'Test Description',
+        'one2m': {
+            'instances': {
+                'data': [
+                    {
+                        'serial_number': 'Test Serial Number',
+                        'procurement_date': 'Test',
+                    },
+                ],
+            }
+        }
+    }
+
+    response = await async_client.post('/hardware/', data, headers={'Authorization': f'Token {token}'}, content_type='application/json')
+    assert response.status_code == 422
+    data = response.json()
+    assert data['errors']['instances'] == [
+        {'procurement_date': ['Date has wrong format. Use one of these formats instead: YYYY-MM-DD.']},
+    ]
+
+@pytest.mark.django_db
+@pytest.mark.asyncio
 async def test_hardware_put_when_viewer(async_client):
     token = await login(async_client, 'viewer@mail.com')
     response = await async_client.put('/hardware/1/', headers={'Authorization': f'Token {token}'})

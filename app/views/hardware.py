@@ -74,8 +74,7 @@ class HardwareList(APIView):
         hardware_instance_serializer = HardwareInstanceSerializer(data=request.data.get('one2m').get('instances').get('data'), many=True)
 
         if not hardware_instance_serializer.is_valid():
-            return Response({"message": "Invalid data", "errors": hardware_instance_serializer.errors}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-            errors.update(hardware_instance_serializer.errors)
+            errors['instances'] = hardware_instance_serializer.errors
 
         if errors:
             return Response({"message": "Invalid data", "errors": errors}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
