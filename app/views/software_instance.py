@@ -16,7 +16,7 @@ class SoftwareInstanceList(APIView):
 
     def get(self, request, format=None):
         software = []
-        search: dict = json.loads(request.query_params['search'])
+        search: dict = json.loads(request.query_params.get('search', '{}'))
         kwargs = {}
 
         # Pagination
@@ -34,7 +34,7 @@ class SoftwareInstanceList(APIView):
 
         # Filtering
         filters = []
-        for key in search["filters"]:
+        for key in search.get('filters', {}):
             for constraint in search["filters"][key]['constraints']:
                 if constraint['value'] is None:
                     continue

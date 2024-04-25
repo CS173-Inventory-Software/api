@@ -51,8 +51,6 @@ class HardwareInstanceList(APIView):
         kwargs['page_size'] = 10000
         rows = HardwareInstance.table.get_rows(**kwargs)
 
-        print(kwargs)
-
         row_counter = 0
         for row in rows:
             row_counter += 1

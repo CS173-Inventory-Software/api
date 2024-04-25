@@ -11,8 +11,6 @@ class User:
             'type': [type],
         }
 
-        print(new_row)
-
         return cls.table.add_row(new_row)
 
 
