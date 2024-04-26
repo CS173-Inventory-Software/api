@@ -8,6 +8,8 @@ urlpatterns = [
     path('logout/', authentication.logout),
     path('request-code/', authentication.request_code),
     path('get-user/', authentication.get_user),
+    path('user/hardware/', user.UserAssignedHardware.as_view()),
+    path('user/software/', user.UserAssignedSoftware.as_view()),
 
     # Hardware
     path('hardware/', hardware.HardwareList.as_view()),

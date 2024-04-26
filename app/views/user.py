@@ -8,6 +8,8 @@ import json
 from django.http import Http404
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
+from app.views.hardware_instance import HardwareInstanceList
+from app.views.software_instance import SoftwareInstanceList
 
 class UserList(APIView):
     authentication_classes = [SessionAuthentication, TokenAuthentication]
@@ -110,3 +112,53 @@ class UserDetail(APIView):
         row.delete()
 
         return Response({'message': 'Successful'}, status=status.HTTP_204_NO_CONTENT)
+
+class UserAssignedHardware(APIView):
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        search = json.loads(request._request.GET.copy().get('search', '{}'))
+        filters = search.get('filters', {})
+
+        filters['assignee_formula'] = {
+            'constraints': [
+                {
+                    'value': request.user.email,
+                    'matchMode': 'equals'
+                }
+            ]
+        }
+
+        get_params = request._request.GET.copy()
+        get_params['search'] = json.dumps({'filters': filters})
+        request._request.GET = get_params
+
+        response = HardwareInstanceList.as_view()(request._request)
+
+        return response
+\
+class UserAssignedSoftware(APIView):
+    authentication_classes = [SessionAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        search = json.loads(request._request.GET.copy().get('search', '{}'))
+        filters = search.get('filters', {})
+
+        filters['assignee_formula'] = {
+            'constraints': [
+                {
+                    'value': request.user.email,
+                    'matchMode': 'equals'
+                }
+            ]
+        }
+
+        get_params = request._request.GET.copy()
+        get_params['search'] = json.dumps({'filters': filters})
+        request._request.GET = get_params
+
+        response = SoftwareInstanceList.as_view()(request._request)
+
+        return response
