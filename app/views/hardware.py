@@ -186,8 +186,7 @@ class HardwareDetail(APIView):
                 if request.user.role.role in [UserTypeEnum.ADMIN.value, UserTypeEnum.SUPER_ADMIN.value, UserTypeEnum.ROOT_ADMIN.value]:
                     instance_row['serial_number'] = instance['serial_number']
                     instance_row['procurement_date'] = instance['procurement_date']
-                    if instance.get('status'):
-                        instance_row['status'] = [instance['status']]
+                    instance_row['status'] = [instance['status']] if instance.get('status') else []
 
                 # Check if the new assignee is set and the current assignee is not set
                 # Assign

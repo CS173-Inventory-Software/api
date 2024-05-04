@@ -223,8 +223,7 @@ class SoftwareDetail(APIView):
 
                 if request.user.role.role in [UserTypeEnum.ADMIN.value, UserTypeEnum.SUPER_ADMIN.value, UserTypeEnum.ROOT_ADMIN.value]:
                     instance_row['serial_key'] = instance['serial_key']
-                    if instance.get('status'):
-                        instance_row['status'] = [instance['status']]
+                    instance_row['status'] = [instance['status']] if instance.get('status') else []
 
                 current_assignee = instance_row['assignee']
                 assignment_type = None

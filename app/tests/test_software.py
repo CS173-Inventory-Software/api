@@ -469,6 +469,45 @@ async def test_software_put_admin_can_edit_instances(async_client, email):
 @pytest.mark.parametrize('email', ['admin@mail.com', 'super@mail.com', 'root@mail.com'])
 @pytest.mark.django_db
 @pytest.mark.asyncio
+async def test_software_put_null_status_removes_status(async_client, email):
+    token = await login(async_client, email)
+    software = create_software()
+
+    response = await async_client.get(
+        f'/software/{software.id}/', 
+        headers={'Authorization': f'Token {token}'}
+        )
+    data = response.json()['data']
+
+    data['one2m']['instances']['data'][0]['status'] = 2
+    data['one2m']['instances']['delete'] = []
+    data['one2m']['subscriptions']['delete'] = []
+
+    await async_client.put(f'/software/{software.id}/', data, headers={'Authorization': f'Token {token}'}, content_type='application/json')
+
+    response = await async_client.get(
+        f'/software/{software.id}/', 
+        headers={'Authorization': f'Token {token}'}
+        )
+    data = response.json()['data']
+    assert data['one2m']['instances']['data'][0]['status'] == 2
+
+    data['one2m']['instances']['data'][0]['status'] = None
+    data['one2m']['instances']['delete'] = []
+    data['one2m']['subscriptions']['delete'] = []
+
+    await async_client.put(f'/software/{software.id}/', data, headers={'Authorization': f'Token {token}'}, content_type='application/json')
+    response = await async_client.get(
+        f'/software/{software.id}/', 
+        headers={'Authorization': f'Token {token}'}
+        )
+
+    data = response.json()['data']
+    assert data['one2m']['instances']['data'][0]['status'] == None
+
+@pytest.mark.parametrize('email', ['admin@mail.com', 'super@mail.com', 'root@mail.com'])
+@pytest.mark.django_db
+@pytest.mark.asyncio
 async def test_software_put_admin_can_edit_subscriptions(async_client, email):
     token = await login(async_client, email)
     software = create_software()
