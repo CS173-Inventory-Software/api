@@ -119,9 +119,9 @@ class UserAssignedHardware(APIView):
     
     def get(self, request):
         search = json.loads(request._request.GET.copy().get('search', '{}'))
-        filters = search.get('filters', {})
+        search['filters'] = search['filters'] if 'filters' in search else {}
 
-        filters['assignee_formula'] = {
+        search['filters']['assignee_formula'] = {
             'constraints': [
                 {
                     'value': request.user.email,
@@ -131,7 +131,7 @@ class UserAssignedHardware(APIView):
         }
 
         get_params = request._request.GET.copy()
-        get_params['search'] = json.dumps({'filters': filters})
+        get_params['search'] = json.dumps(search)
         request._request.GET = get_params
 
         response = HardwareInstanceList.as_view()(request._request)
@@ -144,9 +144,9 @@ class UserAssignedSoftware(APIView):
     
     def get(self, request):
         search = json.loads(request._request.GET.copy().get('search', '{}'))
-        filters = search.get('filters', {})
+        search['filters'] = search['filters'] if 'filters' in search else {}
 
-        filters['assignee_formula'] = {
+        search['filters']['assignee_formula'] = {
             'constraints': [
                 {
                     'value': request.user.email,
@@ -156,7 +156,7 @@ class UserAssignedSoftware(APIView):
         }
 
         get_params = request._request.GET.copy()
-        get_params['search'] = json.dumps({'filters': filters})
+        get_params['search'] = json.dumps(search)
         request._request.GET = get_params
 
         response = SoftwareInstanceList.as_view()(request._request)

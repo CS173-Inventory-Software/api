@@ -7,11 +7,11 @@ import datetime
 class SoftwareNearExpiry(APIView):
     def get(self, request):
         search = json.loads(request._request.GET.copy().get('search', '{}'))
-        filters = search.get('filters', {})
+        search['filters'] = search['filters'] if 'filters' in search else {}
 
         seven_days_from_now = datetime.datetime.now() + datetime.timedelta(days=7)
 
-        filters['software_expiration_date'] = {
+        search['filters']['software_expiration_date'] = {
             'constraints': [
                 {
                     'value': seven_days_from_now.strftime('%Y-%m-%d'),
@@ -21,7 +21,7 @@ class SoftwareNearExpiry(APIView):
         }
 
         get_params = request._request.GET.copy()
-        get_params['search'] = json.dumps({'filters': filters})
+        get_params['search'] = json.dumps(search)
         request._request.GET = get_params
 
         response = SoftwareInstanceList.as_view()(request._request)
@@ -31,9 +31,10 @@ class SoftwareNearExpiry(APIView):
 class HardwareNeedingMaintenance(APIView):
     def get(self, request):
         search = json.loads(request._request.GET.copy().get('search', '{}'))
-        filters = search.get('filters', {})
+        search['filters'] = search['filters'] if 'filters' in search else {}
 
-        filters['status_formula'] = {
+
+        search['filters']['status_formula'] = {
             'constraints': [
                 {
                     'value': 'For Repair',
@@ -43,7 +44,7 @@ class HardwareNeedingMaintenance(APIView):
         }
 
         get_params = request._request.GET.copy()
-        get_params['search'] = json.dumps({'filters': filters})
+        get_params['search'] = json.dumps(search)
         request._request.GET = get_params
 
         response = HardwareInstanceList.as_view()(request._request)
@@ -53,9 +54,9 @@ class HardwareNeedingMaintenance(APIView):
 class HardwareNotAssigned(APIView):
     def get(self, request):
         search = json.loads(request._request.GET.copy().get('search', '{}'))
-        filters = search.get('filters', {})
+        search['filters'] = search['filters'] if 'filters' in search else {}
 
-        filters['status_formula'] = {
+        search['filters']['status_formula'] = {
             'constraints': [
                 {
                     'value': 'Unassigned',
@@ -65,7 +66,7 @@ class HardwareNotAssigned(APIView):
         }
 
         get_params = request._request.GET.copy()
-        get_params['search'] = json.dumps({'filters': filters})
+        get_params['search'] = json.dumps(search)
         request._request.GET = get_params
 
         response = HardwareInstanceList.as_view()(request._request)
@@ -75,9 +76,9 @@ class HardwareNotAssigned(APIView):
 class SoftwareNotAssigned(APIView):
     def get(self, request):
         search = json.loads(request._request.GET.copy().get('search', '{}'))
-        filters = search.get('filters', {})
+        search['filters'] = search['filters'] if 'filters' in search else {}
 
-        filters['status_formula'] = {
+        search['filters']['status_formula'] = {
             'constraints': [
                 {
                     'value': 'Unassigned',
@@ -87,7 +88,7 @@ class SoftwareNotAssigned(APIView):
         }
 
         get_params = request._request.GET.copy()
-        get_params['search'] = json.dumps({'filters': filters})
+        get_params['search'] = json.dumps(search)
         request._request.GET = get_params
 
         response = SoftwareInstanceList.as_view()(request._request)
