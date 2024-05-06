@@ -1,6 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
+
+from app.serializers.user import UserSerializer
 from ..baserow_client import get_baserow_operator
 from ..baserow_client.user import User, UserType, UserTypeEnum
 from baserowapi import Filter
@@ -61,6 +63,10 @@ class UserList(APIView):
         return Response({'data': users, 'totalRecords': row_counter}, status=status.HTTP_200_OK)
 
     def post(self, request, format=None):
+        user_serializer = UserSerializer(data=request.data)
+        if not user_serializer.is_valid():
+            return Response({"message": "Invalid data", "errors": user_serializer.errors}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
         if request.user.role.role not in [UserTypeEnum.SUPER_ADMIN.value, UserTypeEnum.ROOT_ADMIN.value]:
             return Response({'message': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -90,6 +96,10 @@ class UserDetail(APIView):
 
     def put(self, request, pk, format=None):
         row = User.table.get_row(pk)
+
+        user_serializer = UserSerializer(data=request.data)
+        if not user_serializer.is_valid():
+            return Response({"message": "Invalid data", "errors": user_serializer.errors}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
         if (request.user.role.role not in [UserTypeEnum.SUPER_ADMIN.value, UserTypeEnum.ROOT_ADMIN.value] 
                 or row.values['type'].id == UserTypeEnum.ROOT_ADMIN.value):
