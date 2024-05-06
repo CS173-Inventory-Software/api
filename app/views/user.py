@@ -89,13 +89,16 @@ class UserDetail(APIView):
         return Response({'data': data})
 
     def put(self, request, pk, format=None):
-        if request.user.role.role not in [UserTypeEnum.SUPER_ADMIN.value, UserTypeEnum.ROOT_ADMIN.value]:
+        row = User.table.get_row(pk)
+
+        if (request.user.role.role not in [UserTypeEnum.SUPER_ADMIN.value, UserTypeEnum.ROOT_ADMIN.value] 
+                or row.values['type'].id == UserTypeEnum.ROOT_ADMIN.value):
             return Response({'message': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
 
         if request.data.get('type') not in [UserTypeEnum.VIEWER.value, UserTypeEnum.CLERK.value, UserTypeEnum.ADMIN.value, UserTypeEnum.SUPER_ADMIN.value]:
             return Response({'message': 'Invalid user type'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-        row = User.table.get_row(pk)
+
         row['email'] = request.data.get('email')
         row['type'] = [request.data.get('type')]
         row.update()
