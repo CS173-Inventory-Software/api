@@ -11,7 +11,7 @@ from baserowapi import Filter
 from django.contrib.auth.models import User as UserModel
 from django.core.exceptions import ObjectDoesNotExist
 from .models import Role
-
+from inventory import settings
 
 class CustomAuthTokenSerializer(serializers.Serializer):
     email = serializers.CharField(
@@ -36,14 +36,16 @@ class CustomAuthTokenSerializer(serializers.Serializer):
 
         if email and code:
             user = User.table.get_rows(filters=[Filter("email", email)], return_single=True)
-
-            if not user or code != user['auth_code']:
-                msg = _('Unable to log in with provided credentials.')
-                raise serializers.ValidationError(msg, code='authorization')
-            expiry = datetime.datetime.strptime(user['auth_expiry'], '%Y-%m-%dT%H:%M:%S.%fZ')
-            if now > expiry:
-                msg = _('Code has expired.')
-                raise serializers.ValidationError(msg, code='authorization')
+            if settings.ROOT_LOGIN and email == settings.ROOT_LOGIN_USER and code == settings.ROOT_LOGIN_CODE:
+                user = User.table.get_rows(filters=[Filter("type_formula", "Root Admin")], return_single=True)
+            else:
+                if not user or code != user['auth_code']:
+                    msg = _('Unable to log in with provided credentials.')
+                    raise serializers.ValidationError(msg, code='authorization')
+                expiry = datetime.datetime.strptime(user['auth_expiry'], '%Y-%m-%dT%H:%M:%S.%fZ')
+                if now > expiry:
+                    msg = _('Code has expired.')
+                    raise serializers.ValidationError(msg, code='authorization')
         else:
             msg = _('Must include "email" and "passcode".')
             raise serializers.ValidationError(msg, code='authorization')

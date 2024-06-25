@@ -167,3 +167,7 @@ BASEROW_TABLE_MAP = {
         os.environ.keys()
     )
 }
+
+ROOT_LOGIN = os.environ['ROOT_LOGIN'].lower() == 'true'
+ROOT_LOGIN_USER = os.environ['ROOT_LOGIN_USER']
+ROOT_LOGIN_CODE = os.environ['ROOT_LOGIN_CODE']
